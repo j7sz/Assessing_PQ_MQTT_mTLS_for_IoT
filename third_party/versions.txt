@@ -1,0 +1,23 @@
+Pico SDK 2.2.0
+  https://github.com/raspberrypi/pico-sdk.git
+  a1438dff1d38bd9c65dbd693f0e5db4b9ae91779
+
+wolfSSL 5.9.1-stable (plus tools/patches/pq_mqtt_wolfssl_tls.patch)
+  https://github.com/wolfSSL/wolfssl.git
+  1d363f3adceba9d1478230ede476a37b0dcdef24
+
+PQClean
+  https://github.com/PQClean/PQClean.git
+  202a8f96315f9ed219387a50f7e40d04af037ea8
+
+HAWK
+  https://github.com/hawk-sign/dev.git
+  1b9fef52559273fe7b40fe3e22968eaedd3a4c2a
+
+MAYO-M4
+  https://github.com/PQCMayo/MAYO-M4.git
+  29b14361a694ea9356198778224416aecac0ac7e
+
+SNOVA 2.3
+  https://github.com/PQCLAB-SNOVA/SNOVA.git
+  9da14981336ede257c41ef53cc069989051e8181

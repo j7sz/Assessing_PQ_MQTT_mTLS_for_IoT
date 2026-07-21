@@ -1,0 +1,14 @@
+/build*/
+/keys/*.h
+/third_party/*/
+__pycache__/
+*.uf2
+*.elf
+*.bin
+*.hex
+*.map
+.DS_Store
+/Results/*.xlsx
+/Results/*.rtf
+/Results/PicoW/
+/benchmark-results/

@@ -1,0 +1,3 @@
+# Preserve upstream QR-UOV Round-2 reference formatting without treating its
+# historical whitespace as a local patch-quality failure.
+third_party/qruov-round2/** -whitespace

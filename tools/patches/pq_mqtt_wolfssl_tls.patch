@@ -1,0 +1,1704 @@
+diff --git a/src/internal.c b/src/internal.c
+index ad1587e..0f40ae6 100644
+--- a/src/internal.c
++++ b/src/internal.c
+@@ -22,0 +23,9 @@
++#ifdef WOLFSSL_HAWK512
++    #include "hawk512_tls.h"
++#endif
++#ifdef WOLFSSL_MAYO1
++    #include "mayo1_tls.h"
++#endif
++#ifdef WOLFSSL_SNOVA2454
++    #include "snova2454_tls.h"
++#endif
+@@ -3408,0 +3418,21 @@ static WC_INLINE void AddSuiteHashSigAlgo(byte* hashSigAlgo, byte macAlgo,
++    #ifdef WOLFSSL_HAWK512
++        if (sigAlgo == hawk512_sa_algo) {
++            ADD_HASH_SIG_ALGO(hashSigAlgo, inOutIdx,
++                HAWK512_SA_MAJOR, HAWK512_SA_MINOR);
++        }
++        else
++    #endif /* WOLFSSL_HAWK512 */
++    #ifdef WOLFSSL_MAYO1
++        if (sigAlgo == mayo1_sa_algo) {
++            ADD_HASH_SIG_ALGO(hashSigAlgo, inOutIdx,
++                MAYO1_SA_MAJOR, MAYO1_SA_MINOR);
++        }
++        else
++    #endif /* WOLFSSL_MAYO1 */
++    #ifdef WOLFSSL_SNOVA2454
++        if (sigAlgo == snova2454_sa_algo) {
++            ADD_HASH_SIG_ALGO(hashSigAlgo, inOutIdx,
++                SNOVA2454_SA_MAJOR, SNOVA2454_SA_MINOR);
++        }
++        else
++    #endif /* WOLFSSL_SNOVA2454 */
+@@ -3522,0 +3553,16 @@ void InitSuitesHashSigAlgo(byte* hashSigAlgo, int haveSig, int tls1_2,
++#ifdef WOLFSSL_HAWK512
++    if (haveSig & SIG_HAWK512) {
++        AddSuiteHashSigAlgo(hashSigAlgo, no_mac, hawk512_sa_algo, keySz, &idx);
++    }
++#endif /* WOLFSSL_HAWK512 */
++#ifdef WOLFSSL_MAYO1
++    if (haveSig & SIG_MAYO1) {
++        AddSuiteHashSigAlgo(hashSigAlgo, no_mac, mayo1_sa_algo, keySz, &idx);
++    }
++#endif /* WOLFSSL_MAYO1 */
++#ifdef WOLFSSL_SNOVA2454
++    if (haveSig & SIG_SNOVA2454) {
++        AddSuiteHashSigAlgo(hashSigAlgo, no_mac, snova2454_sa_algo, keySz,
++            &idx);
++    }
++#endif /* WOLFSSL_SNOVA2454 */
+@@ -4758,0 +4805,18 @@ void DecodeSigAlg(const byte* input, byte* hashAlgo, byte* hsType)
++            #ifdef WOLFSSL_HAWK512
++            else if (input[1] == HAWK512_SA_MINOR) {
++                *hsType = hawk512_sa_algo;
++                *hashAlgo = sha512_mac;
++            }
++            #endif
++            #ifdef WOLFSSL_MAYO1
++            else if (input[1] == MAYO1_SA_MINOR) {
++                *hsType = mayo1_sa_algo;
++                *hashAlgo = sha256_mac;
++            }
++            #endif
++            #ifdef WOLFSSL_SNOVA2454
++            else if (input[1] == SNOVA2454_SA_MINOR) {
++                *hsType = snova2454_sa_algo;
++                *hashAlgo = sha256_mac;
++            }
++            #endif
+@@ -4776,0 +4841,40 @@ void DecodeSigAlg(const byte* input, byte* hashAlgo, byte* hsType)
++    #if defined(WOLFSSL_HAWK512) && !defined(HAVE_FALCON)
++        case HAWK512_SA_MAJOR:
++            if (input[1] == HAWK512_SA_MINOR) {
++                *hsType = hawk512_sa_algo;
++                *hashAlgo = sha512_mac;
++            }
++            #ifdef WOLFSSL_MAYO1
++            else if (input[1] == MAYO1_SA_MINOR) {
++                *hsType = mayo1_sa_algo;
++                *hashAlgo = sha256_mac;
++            }
++            #endif
++            #ifdef WOLFSSL_SNOVA2454
++            else if (input[1] == SNOVA2454_SA_MINOR) {
++                *hsType = snova2454_sa_algo;
++                *hashAlgo = sha256_mac;
++            }
++            #endif
++            break;
++    #endif /* WOLFSSL_HAWK512 && !HAVE_FALCON */
++    #if defined(WOLFSSL_MAYO1) || defined(WOLFSSL_SNOVA2454)
++        case MAYO1_SA_MAJOR:
++        #ifdef WOLFSSL_MAYO1
++            if (input[1] == MAYO1_SA_MINOR) {
++                *hsType = mayo1_sa_algo;
++                *hashAlgo = sha256_mac;
++            }
++        #endif
++        #ifdef WOLFSSL_SNOVA2454
++            #ifdef WOLFSSL_MAYO1
++            else if (input[1] == SNOVA2454_SA_MINOR) {
++            #else
++            if (input[1] == SNOVA2454_SA_MINOR) {
++            #endif
++                *hsType = snova2454_sa_algo;
++                *hashAlgo = sha256_mac;
++            }
++        #endif
++            break;
++    #endif /* WOLFSSL_MAYO1 || WOLFSSL_SNOVA2454 */
+@@ -8331,0 +8436,15 @@ void FreeKey(WOLFSSL* ssl, int type, void** pKey)
++        #ifdef WOLFSSL_HAWK512
++            case DYNAMIC_TYPE_HAWK512:
++                wc_Hawk512_Free((wc_Hawk512Key*)*pKey);
++                break;
++        #endif /* WOLFSSL_HAWK512 */
++        #ifdef WOLFSSL_MAYO1
++            case DYNAMIC_TYPE_MAYO1:
++                wc_Mayo1_Free((wc_Mayo1Key*)*pKey);
++                break;
++        #endif /* WOLFSSL_MAYO1 */
++        #ifdef WOLFSSL_SNOVA2454
++            case DYNAMIC_TYPE_SNOVA2454:
++                wc_Snova2454_Free((wc_Snova2454Key*)*pKey);
++                break;
++        #endif /* WOLFSSL_SNOVA2454 */
+@@ -8422,0 +8542,15 @@ int AllocKey(WOLFSSL* ssl, int type, void** pKey)
++    #ifdef WOLFSSL_HAWK512
++        case DYNAMIC_TYPE_HAWK512:
++            sz = sizeof(wc_Hawk512Key);
++            break;
++    #endif /* WOLFSSL_HAWK512 */
++    #ifdef WOLFSSL_MAYO1
++        case DYNAMIC_TYPE_MAYO1:
++            sz = sizeof(wc_Mayo1Key);
++            break;
++    #endif /* WOLFSSL_MAYO1 */
++    #ifdef WOLFSSL_SNOVA2454
++        case DYNAMIC_TYPE_SNOVA2454:
++            sz = sizeof(wc_Snova2454Key);
++            break;
++    #endif /* WOLFSSL_SNOVA2454 */
+@@ -8520,0 +8655,15 @@ int AllocKey(WOLFSSL* ssl, int type, void** pKey)
++    #ifdef WOLFSSL_HAWK512
++        case DYNAMIC_TYPE_HAWK512:
++            ret = wc_Hawk512_Init((wc_Hawk512Key*)*pKey);
++            break;
++    #endif /* WOLFSSL_HAWK512 */
++    #ifdef WOLFSSL_MAYO1
++        case DYNAMIC_TYPE_MAYO1:
++            ret = wc_Mayo1_Init((wc_Mayo1Key*)*pKey);
++            break;
++    #endif /* WOLFSSL_MAYO1 */
++    #ifdef WOLFSSL_SNOVA2454
++        case DYNAMIC_TYPE_SNOVA2454:
++            ret = wc_Snova2454_Init((wc_Snova2454Key*)*pKey);
++            break;
++    #endif /* WOLFSSL_SNOVA2454 */
+@@ -8546 +8695,3 @@ int AllocKey(WOLFSSL* ssl, int type, void** pKey)
+-    defined(HAVE_CURVE448) || defined(HAVE_FALCON) || defined(HAVE_DILITHIUM)
++    defined(HAVE_CURVE448) || defined(HAVE_FALCON) || \
++    defined(HAVE_DILITHIUM) || defined(WOLFSSL_HAWK512) || \
++    defined(WOLFSSL_MAYO1) || defined(WOLFSSL_SNOVA2454)
+@@ -8603,0 +8755,18 @@ static int ReuseKey(WOLFSSL* ssl, int type, void* pKey)
++    #ifdef WOLFSSL_HAWK512
++        case DYNAMIC_TYPE_HAWK512:
++            wc_Hawk512_Free((wc_Hawk512Key*)pKey);
++            ret = wc_Hawk512_Init((wc_Hawk512Key*)pKey);
++            break;
++    #endif /* WOLFSSL_HAWK512 */
++    #ifdef WOLFSSL_MAYO1
++        case DYNAMIC_TYPE_MAYO1:
++            wc_Mayo1_Free((wc_Mayo1Key*)pKey);
++            ret = wc_Mayo1_Init((wc_Mayo1Key*)pKey);
++            break;
++    #endif /* WOLFSSL_MAYO1 */
++    #ifdef WOLFSSL_SNOVA2454
++        case DYNAMIC_TYPE_SNOVA2454:
++            wc_Snova2454_Free((wc_Snova2454Key*)pKey);
++            ret = wc_Snova2454_Init((wc_Snova2454Key*)pKey);
++            break;
++    #endif /* WOLFSSL_SNOVA2454 */
+@@ -8943,0 +9113,12 @@ void wolfSSL_ResourceFree(WOLFSSL* ssl)
++#ifdef WOLFSSL_HAWK512
++    FreeKey(ssl, DYNAMIC_TYPE_HAWK512, (void**)&ssl->peerHawk512Key);
++    ssl->peerHawk512KeyPresent = 0;
++#endif
++#ifdef WOLFSSL_MAYO1
++    FreeKey(ssl, DYNAMIC_TYPE_MAYO1, (void**)&ssl->peerMayo1Key);
++    ssl->peerMayo1KeyPresent = 0;
++#endif
++#ifdef WOLFSSL_SNOVA2454
++    FreeKey(ssl, DYNAMIC_TYPE_SNOVA2454, (void**)&ssl->peerSnova2454Key);
++    ssl->peerSnova2454KeyPresent = 0;
++#endif
+@@ -9215,0 +9397,13 @@ void FreeHandshakeResources(WOLFSSL* ssl)
++#ifdef WOLFSSL_HAWK512
++        FreeKey(ssl, DYNAMIC_TYPE_HAWK512, (void**)&ssl->peerHawk512Key);
++        ssl->peerHawk512KeyPresent = 0;
++#endif /* WOLFSSL_HAWK512 */
++#ifdef WOLFSSL_MAYO1
++        FreeKey(ssl, DYNAMIC_TYPE_MAYO1, (void**)&ssl->peerMayo1Key);
++        ssl->peerMayo1KeyPresent = 0;
++#endif /* WOLFSSL_MAYO1 */
++#ifdef WOLFSSL_SNOVA2454
++        FreeKey(ssl, DYNAMIC_TYPE_SNOVA2454,
++            (void**)&ssl->peerSnova2454Key);
++        ssl->peerSnova2454KeyPresent = 0;
++#endif /* WOLFSSL_SNOVA2454 */
+@@ -17334,0 +17529,78 @@ int ProcessPeerCerts(WOLFSSL* ssl, byte* input, word32* inOutIdx,
++                #ifdef WOLFSSL_HAWK512
++                    case HAWK512k:
++                    {
++                        int keyRet = 0;
++                        if (ssl->peerHawk512Key == NULL) {
++                            keyRet = AllocKey(ssl, DYNAMIC_TYPE_HAWK512,
++                                    (void**)&ssl->peerHawk512Key);
++                        } else if (ssl->peerHawk512KeyPresent) {
++                            keyRet = ReuseKey(ssl, DYNAMIC_TYPE_HAWK512,
++                                    ssl->peerHawk512Key);
++                            ssl->peerHawk512KeyPresent = 0;
++                        }
++
++                        if (keyRet != 0 ||
++                            wc_Hawk512_ImportPublic(args->dCert->publicKey,
++                                                    args->dCert->pubKeySize,
++                                                    ssl->peerHawk512Key) != 0) {
++                            ret = PEER_KEY_ERROR;
++                            WOLFSSL_ERROR_VERBOSE(ret);
++                        }
++                        else {
++                            ssl->peerHawk512KeyPresent = 1;
++                        }
++                        break;
++                    }
++                #endif /* WOLFSSL_HAWK512 */
++                #ifdef WOLFSSL_MAYO1
++                    case MAYO1k:
++                    {
++                        int keyRet = 0;
++                        if (ssl->peerMayo1Key == NULL) {
++                            keyRet = AllocKey(ssl, DYNAMIC_TYPE_MAYO1,
++                                    (void**)&ssl->peerMayo1Key);
++                        } else if (ssl->peerMayo1KeyPresent) {
++                            keyRet = ReuseKey(ssl, DYNAMIC_TYPE_MAYO1,
++                                    ssl->peerMayo1Key);
++                            ssl->peerMayo1KeyPresent = 0;
++                        }
++
++                        if (keyRet != 0 ||
++                            wc_Mayo1_ImportPublic(args->dCert->publicKey,
++                                                  args->dCert->pubKeySize,
++                                                  ssl->peerMayo1Key) != 0) {
++                            ret = PEER_KEY_ERROR;
++                            WOLFSSL_ERROR_VERBOSE(ret);
++                        }
++                        else {
++                            ssl->peerMayo1KeyPresent = 1;
++                        }
++                        break;
++                    }
++                #endif /* WOLFSSL_MAYO1 */
++                #ifdef WOLFSSL_SNOVA2454
++                    case SNOVA2454k:
++                    {
++                        int keyRet = 0;
++                        if (ssl->peerSnova2454Key == NULL) {
++                            keyRet = AllocKey(ssl, DYNAMIC_TYPE_SNOVA2454,
++                                    (void**)&ssl->peerSnova2454Key);
++                        } else if (ssl->peerSnova2454KeyPresent) {
++                            keyRet = ReuseKey(ssl, DYNAMIC_TYPE_SNOVA2454,
++                                    ssl->peerSnova2454Key);
++                            ssl->peerSnova2454KeyPresent = 0;
++                        }
++
++                        if (keyRet != 0 ||
++                            wc_Snova2454_ImportPublic(args->dCert->publicKey,
++                                                  args->dCert->pubKeySize,
++                                                  ssl->peerSnova2454Key) != 0) {
++                            ret = PEER_KEY_ERROR;
++                            WOLFSSL_ERROR_VERBOSE(ret);
++                        }
++                        else {
++                            ssl->peerSnova2454KeyPresent = 1;
++                        }
++                        break;
++                    }
++                #endif /* WOLFSSL_SNOVA2454 */
+@@ -29109,0 +29382,9 @@ static int ParseCipherList(Suites* suites,
++                #ifdef WOLFSSL_HAWK512
++                    haveSig |= SIG_HAWK512;
++                #endif /* WOLFSSL_HAWK512 */
++                #ifdef WOLFSSL_MAYO1
++                    haveSig |= SIG_MAYO1;
++                #endif /* WOLFSSL_MAYO1 */
++                #ifdef WOLFSSL_SNOVA2454
++                    haveSig |= SIG_SNOVA2454;
++                #endif /* WOLFSSL_SNOVA2454 */
+@@ -29272,0 +29554,3 @@ int SetCipherListFromBytes(WOLFSSL_CTX* ctx, Suites* suites, const byte* list,
++    int haveHawk512Sig   = 0;
++    int haveMayo1Sig     = 0;
++    int haveSnova2454Sig = 0;
+@@ -29346,0 +29631,9 @@ int SetCipherListFromBytes(WOLFSSL_CTX* ctx, Suites* suites, const byte* list,
++        #ifdef WOLFSSL_HAWK512
++            haveHawk512Sig = 1;
++        #endif /* WOLFSSL_HAWK512 */
++        #ifdef WOLFSSL_MAYO1
++            haveMayo1Sig = 1;
++        #endif /* WOLFSSL_MAYO1 */
++        #ifdef WOLFSSL_SNOVA2454
++            haveSnova2454Sig = 1;
++        #endif /* WOLFSSL_SNOVA2454 */
+@@ -29384,0 +29678,3 @@ int SetCipherListFromBytes(WOLFSSL_CTX* ctx, Suites* suites, const byte* list,
++        haveSig |= haveHawk512Sig ? SIG_HAWK512 : 0;
++        haveSig |= haveMayo1Sig ? SIG_MAYO1 : 0;
++        haveSig |= haveSnova2454Sig ? SIG_SNOVA2454 : 0;
+@@ -29625,0 +29922,15 @@ static int MatchSigAlgo(WOLFSSL* ssl, int sigAlgo)
++#ifdef WOLFSSL_HAWK512
++    if (ssl->pkCurveOID == HAWK512k) {
++        return sigAlgo == hawk512_sa_algo;
++    }
++#endif /* WOLFSSL_HAWK512 */
++#ifdef WOLFSSL_MAYO1
++    if (ssl->pkCurveOID == MAYO1k) {
++        return sigAlgo == mayo1_sa_algo;
++    }
++#endif /* WOLFSSL_MAYO1 */
++#ifdef WOLFSSL_SNOVA2454
++    if (ssl->pkCurveOID == SNOVA2454k) {
++        return sigAlgo == snova2454_sa_algo;
++    }
++#endif /* WOLFSSL_SNOVA2454 */
+@@ -29837,0 +30149,24 @@ int PickHashSigAlgo(WOLFSSL* ssl, const byte* hashSigAlgo, word32 hashSigAlgoSz,
++    #if defined(WOLFSSL_HAWK512)
++        if (ssl->pkCurveOID == HAWK512k) {
++            ssl->options.sigAlgo = sigAlgo;
++            ssl->options.hashAlgo = hashAlgo;
++            ret = 0;
++            break;
++        }
++    #endif /* WOLFSSL_HAWK512 */
++    #if defined(WOLFSSL_MAYO1)
++        if (ssl->pkCurveOID == MAYO1k) {
++            ssl->options.sigAlgo = sigAlgo;
++            ssl->options.hashAlgo = hashAlgo;
++            ret = 0;
++            break;
++        }
++    #endif /* WOLFSSL_MAYO1 */
++    #if defined(WOLFSSL_SNOVA2454)
++        if (ssl->pkCurveOID == SNOVA2454k) {
++            ssl->options.sigAlgo = sigAlgo;
++            ssl->options.hashAlgo = hashAlgo;
++            ret = 0;
++            break;
++        }
++    #endif /* WOLFSSL_SNOVA2454 */
+@@ -30366,0 +30702,6 @@ static int DecodePrivateKey_ex(WOLFSSL *ssl, byte keyType, const DerBuffer* key,
++        else if (keyType == hawk512_sa_algo)
++            *hsType = DYNAMIC_TYPE_HAWK512;
++        else if (keyType == mayo1_sa_algo)
++            *hsType = DYNAMIC_TYPE_MAYO1;
++        else if (keyType == snova2454_sa_algo)
++            *hsType = DYNAMIC_TYPE_SNOVA2454;
+@@ -30451,0 +30793,33 @@ static int DecodePrivateKey_ex(WOLFSSL *ssl, byte keyType, const DerBuffer* key,
++    #endif
++        }
++        else if (*hsType == DYNAMIC_TYPE_HAWK512) {
++    #ifdef WOLFSSL_HAWK512
++            if (keySz != (int)WC_HAWK512_KEYPAIR_SIZE) {
++                WOLFSSL_MSG("HAWK-512 key size wrong");
++                ERROR_OUT(ASN_PARSE_E, exit_dpk);
++            }
++            *sigLen = WC_HAWK512_SIG_SIZE;
++    #else
++            ret = NOT_COMPILED_IN;
++    #endif
++        }
++        else if (*hsType == DYNAMIC_TYPE_MAYO1) {
++    #ifdef WOLFSSL_MAYO1
++            if (keySz != (int)WC_MAYO1_KEYPAIR_SIZE) {
++                WOLFSSL_MSG("MAYO-1 key size wrong");
++                ERROR_OUT(ASN_PARSE_E, exit_dpk);
++            }
++            *sigLen = WC_MAYO1_SIG_SIZE;
++    #else
++            ret = NOT_COMPILED_IN;
++    #endif
++        }
++        else if (*hsType == DYNAMIC_TYPE_SNOVA2454) {
++    #ifdef WOLFSSL_SNOVA2454
++            if (keySz != (int)WC_SNOVA2454_KEYPAIR_SIZE) {
++                WOLFSSL_MSG("SNOVA-24-5-16-4 key size wrong");
++                ERROR_OUT(ASN_PARSE_E, exit_dpk);
++            }
++            *sigLen = WC_SNOVA2454_SIG_SIZE;
++    #else
++            ret = NOT_COMPILED_IN;
+@@ -30786,0 +31161,117 @@ static int DecodePrivateKey_ex(WOLFSSL *ssl, byte keyType, const DerBuffer* key,
++#ifdef WOLFSSL_HAWK512
++    #if !defined(NO_RSA) || defined(HAVE_ECC)
++        FreeKey(ssl, *hsType, hsKey);
++    #endif
++
++    if (keyType == hawk512_sa_algo || keyType == 0) {
++        word32 algId = 0;
++        int keyLen;
++
++        *hsType = DYNAMIC_TYPE_HAWK512;
++        ret = AllocKey(ssl, *hsType, hsKey);
++        if (ret != 0) {
++            goto exit_dpk;
++        }
++
++        WOLFSSL_MSG("Trying HAWK-512 private key");
++
++        idx = 0;
++        keyLen = ToTraditionalInline_ex(key->buffer, &idx, key->length,
++            &algId);
++        if ((keyLen == (int)WC_HAWK512_KEYPAIR_SIZE) &&
++                (algId == HAWK512k)) {
++            ret = wc_Hawk512_ImportPrivateKeyPair(key->buffer + idx,
++                (word32)keyLen, (wc_Hawk512Key*)*hsKey);
++        }
++        else {
++            ret = ASN_PARSE_E;
++        }
++
++        if (ret == 0) {
++            WOLFSSL_MSG("Using HAWK-512 private key");
++            *sigLen = WC_HAWK512_SIG_SIZE;
++            goto exit_dpk;
++        }
++    }
++#endif /* WOLFSSL_HAWK512 */
++
++#ifdef WOLFSSL_MAYO1
++    #if !defined(NO_RSA) || defined(HAVE_ECC) || defined(WOLFSSL_HAWK512)
++        FreeKey(ssl, *hsType, hsKey);
++    #endif
++
++    if (keyType == mayo1_sa_algo || keyType == 0) {
++        word32 algId = 0;
++        int keyLen;
++        const byte* keyPair = NULL;
++        word32 keyPairLen = 0;
++
++        *hsType = DYNAMIC_TYPE_MAYO1;
++        ret = AllocKey(ssl, *hsType, hsKey);
++        if (ret != 0) {
++            goto exit_dpk;
++        }
++
++        WOLFSSL_MSG("Trying MAYO-1 private key");
++
++        idx = 0;
++        keyLen = ToTraditionalInline_ex(key->buffer, &idx, key->length,
++            &algId);
++        if ((keyLen >= 0) && (algId == MAYO1k) &&
++                (wc_Mayo1_UnwrapPrivateKeyData(key->buffer + idx,
++                    (word32)keyLen, &keyPair, &keyPairLen) == 0)) {
++            ret = wc_Mayo1_ImportPrivateKeyPair(keyPair, keyPairLen,
++                (wc_Mayo1Key*)*hsKey);
++        }
++        else {
++            ret = ASN_PARSE_E;
++        }
++
++        if (ret == 0) {
++            WOLFSSL_MSG("Using MAYO-1 private key");
++            *sigLen = WC_MAYO1_SIG_SIZE;
++            goto exit_dpk;
++        }
++    }
++#endif /* WOLFSSL_MAYO1 */
++
++#ifdef WOLFSSL_SNOVA2454
++    #if !defined(NO_RSA) || defined(HAVE_ECC) || defined(WOLFSSL_HAWK512) || \
++        defined(WOLFSSL_MAYO1)
++        FreeKey(ssl, *hsType, hsKey);
++    #endif
++
++    if (keyType == snova2454_sa_algo || keyType == 0) {
++        word32 algId = 0;
++        int keyLen;
++        const byte* keyPair = NULL;
++        word32 keyPairLen = 0;
++
++        *hsType = DYNAMIC_TYPE_SNOVA2454;
++        ret = AllocKey(ssl, *hsType, hsKey);
++        if (ret != 0) {
++            goto exit_dpk;
++        }
++
++        WOLFSSL_MSG("Trying SNOVA-24-5-16-4 private key");
++
++        idx = 0;
++        keyLen = ToTraditionalInline_ex(key->buffer, &idx, key->length,
++            &algId);
++        if ((keyLen >= 0) && (algId == SNOVA2454k) &&
++                (wc_Snova2454_UnwrapPrivateKeyData(key->buffer + idx,
++                    (word32)keyLen, &keyPair, &keyPairLen) == 0)) {
++            ret = wc_Snova2454_ImportPrivateKeyPair(keyPair, keyPairLen,
++                (wc_Snova2454Key*)*hsKey);
++        }
++        else {
++            ret = ASN_PARSE_E;
++        }
++
++        if (ret == 0) {
++            WOLFSSL_MSG("Using SNOVA-24-5-16-4 private key");
++            *sigLen = WC_SNOVA2454_SIG_SIZE;
++            goto exit_dpk;
++        }
++    }
++#endif /* WOLFSSL_SNOVA2454 */
+@@ -35184,0 +35676,18 @@ static int DoSessionTicket(WOLFSSL* ssl, const byte* input, word32* inOutIdx,
++        #endif
++        #ifdef WOLFSSL_HAWK512
++            case hawk512_sa_algo:
++                sigSz = WC_HAWK512_SIG_SIZE;
++                ssl->hsType = DYNAMIC_TYPE_HAWK512;
++                break;
++        #endif
++        #ifdef WOLFSSL_MAYO1
++            case mayo1_sa_algo:
++                sigSz = WC_MAYO1_SIG_SIZE;
++                ssl->hsType = DYNAMIC_TYPE_MAYO1;
++                break;
++        #endif
++        #ifdef WOLFSSL_SNOVA2454
++            case snova2454_sa_algo:
++                sigSz = WC_SNOVA2454_SIG_SIZE;
++                ssl->hsType = DYNAMIC_TYPE_SNOVA2454;
++                break;
+diff --git a/src/ssl_load.c b/src/ssl_load.c
+index 0a0fb9e..73923cf 100644
+--- a/src/ssl_load.c
++++ b/src/ssl_load.c
+@@ -64,0 +65,9 @@
++#ifdef WOLFSSL_HAWK512
++    #include "hawk512_tls.h"
++#endif
++#ifdef WOLFSSL_MAYO1
++    #include "mayo1_tls.h"
++#endif
++#ifdef WOLFSSL_SNOVA2454
++    #include "snova2454_tls.h"
++#endif
+@@ -817,0 +827 @@ static int ProcessBufferTryDecodeFalcon(WOLFSSL_CTX* ctx, WOLFSSL* ssl,
++    int detectedFormat = *keyFormat;
+@@ -824,0 +835,11 @@ static int ProcessBufferTryDecodeFalcon(WOLFSSL_CTX* ctx, WOLFSSL* ssl,
++    if (detectedFormat == 0) {
++        word32 idx = 0;
++        word32 algId = 0;
++
++        if ((ToTraditionalInline_ex(der->buffer, &idx, der->length,
++                    &algId) >= 0) &&
++                ((algId == FALCON_LEVEL1k) || (algId == FALCON_LEVEL5k))) {
++            detectedFormat = (int)algId;
++        }
++    }
++
+@@ -829 +850 @@ static int ProcessBufferTryDecodeFalcon(WOLFSSL_CTX* ctx, WOLFSSL* ssl,
+-        if ((*keyFormat == FALCON_LEVEL1k) || ((*keyFormat == 0) &&
++        if ((detectedFormat == FALCON_LEVEL1k) || ((detectedFormat == 0) &&
+@@ -832,0 +854 @@ static int ProcessBufferTryDecodeFalcon(WOLFSSL_CTX* ctx, WOLFSSL* ssl,
++            detectedFormat = FALCON_LEVEL1k;
+@@ -834 +856 @@ static int ProcessBufferTryDecodeFalcon(WOLFSSL_CTX* ctx, WOLFSSL* ssl,
+-        else if ((*keyFormat == FALCON_LEVEL5k) || ((*keyFormat == 0) &&
++        else if ((detectedFormat == FALCON_LEVEL5k) || ((detectedFormat == 0) &&
+@@ -837,0 +860 @@ static int ProcessBufferTryDecodeFalcon(WOLFSSL_CTX* ctx, WOLFSSL* ssl,
++            detectedFormat = FALCON_LEVEL5k;
+@@ -854,0 +878 @@ static int ProcessBufferTryDecodeFalcon(WOLFSSL_CTX* ctx, WOLFSSL* ssl,
++            *keyFormat = detectedFormat;
+@@ -1003,0 +1028,168 @@ static int ProcessBufferTryDecodeDilithium(WOLFSSL_CTX* ctx, WOLFSSL* ssl,
++#ifdef WOLFSSL_HAWK512
++/* See if DER data is a HAWK-512 private key.
++ *
++ * The local HAWK provider encodes PKCS#8 PrivateKeyInfo with a private-key
++ * OCTET STRING containing raw priv || pub.
++ */
++static int ProcessBufferTryDecodeHawk512(WOLFSSL_CTX* ctx, WOLFSSL* ssl,
++    DerBuffer* der, int* keyFormat, byte* keyType, int* keySize)
++{
++    int ret = 0;
++    word32 idx = 0;
++    word32 algId = 0;
++    int keyLen;
++    const byte* keyData = der->buffer;
++
++    (void)ctx;
++    (void)ssl;
++
++    keyLen = ToTraditionalInline_ex(der->buffer, &idx, der->length, &algId);
++    if (keyLen >= 0) {
++        keyData = der->buffer + idx;
++    }
++    else if (*keyFormat == HAWK512k) {
++        algId = HAWK512k;
++        keyLen = (int)der->length;
++    }
++    else {
++        ret = 0;
++    }
++
++    if ((ret == 0) && (algId == HAWK512k)) {
++        wc_Hawk512Key key;
++
++        if ((keyLen != (int)WC_HAWK512_KEYPAIR_SIZE) ||
++                (wc_Hawk512_Init(&key) != 0) ||
++                (wc_Hawk512_ImportPrivateKeyPair(keyData, (word32)keyLen,
++                    &key) != 0)) {
++            ret = ASN_PARSE_E;
++        }
++        else {
++            *keyFormat = HAWK512k;
++            *keyType = hawk512_sa_algo;
++            *keySize = WC_HAWK512_KEYPAIR_SIZE;
++        }
++        wc_Hawk512_Free(&key);
++    }
++    else if ((ret == 0) && (*keyFormat == 0)) {
++        WOLFSSL_MSG("Not a HAWK-512 key");
++    }
++
++    return ret;
++}
++#endif /* WOLFSSL_HAWK512 */
++
++#ifdef WOLFSSL_MAYO1
++/* See if DER data is a MAYO-1 private key.
++ *
++ * The local MAYO-1 test path encodes PKCS#8 PrivateKeyInfo with a private-key
++ * OCTET STRING containing raw sk || pk.
++ */
++static int ProcessBufferTryDecodeMayo1(WOLFSSL_CTX* ctx, WOLFSSL* ssl,
++    DerBuffer* der, int* keyFormat, byte* keyType, int* keySize)
++{
++    int ret = 0;
++    word32 idx = 0;
++    word32 algId = 0;
++    int keyLen;
++    const byte* keyData = der->buffer;
++
++    (void)ctx;
++    (void)ssl;
++
++    keyLen = ToTraditionalInline_ex(der->buffer, &idx, der->length, &algId);
++    if (keyLen >= 0) {
++        keyData = der->buffer + idx;
++    }
++    else if (*keyFormat == MAYO1k) {
++        algId = MAYO1k;
++        keyLen = (int)der->length;
++    }
++    else {
++        ret = 0;
++    }
++
++    if ((ret == 0) && (algId == MAYO1k)) {
++        wc_Mayo1Key key;
++        const byte* keyPair = NULL;
++        word32 keyPairLen = 0;
++
++        if ((wc_Mayo1_UnwrapPrivateKeyData(keyData, (word32)keyLen,
++                    &keyPair, &keyPairLen) != 0) ||
++                (wc_Mayo1_Init(&key) != 0) ||
++                (wc_Mayo1_ImportPrivateKeyPair(keyPair, keyPairLen,
++                    &key) != 0)) {
++            ret = ASN_PARSE_E;
++        }
++        else {
++            *keyFormat = MAYO1k;
++            *keyType = mayo1_sa_algo;
++            *keySize = WC_MAYO1_KEYPAIR_SIZE;
++        }
++        wc_Mayo1_Free(&key);
++    }
++    else if ((ret == 0) && (*keyFormat == 0)) {
++        WOLFSSL_MSG("Not a MAYO-1 key");
++    }
++
++    return ret;
++}
++#endif /* WOLFSSL_MAYO1 */
++
++#ifdef WOLFSSL_SNOVA2454
++/* See if DER data is a SNOVA-24-5-16-4 private key.
++ *
++ * oqs-provider encodes PKCS#8 PrivateKeyInfo with a private-key OCTET STRING
++ * containing raw sk || pk.
++ */
++static int ProcessBufferTryDecodeSnova2454(WOLFSSL_CTX* ctx, WOLFSSL* ssl,
++    DerBuffer* der, int* keyFormat, byte* keyType, int* keySize)
++{
++    int ret = 0;
++    word32 idx = 0;
++    word32 algId = 0;
++    int keyLen;
++    const byte* keyData = der->buffer;
++
++    (void)ctx;
++    (void)ssl;
++
++    keyLen = ToTraditionalInline_ex(der->buffer, &idx, der->length, &algId);
++    if (keyLen >= 0) {
++        keyData = der->buffer + idx;
++    }
++    else if (*keyFormat == SNOVA2454k) {
++        algId = SNOVA2454k;
++        keyLen = (int)der->length;
++    }
++    else {
++        ret = 0;
++    }
++
++    if ((ret == 0) && (algId == SNOVA2454k)) {
++        wc_Snova2454Key key;
++        const byte* keyPair = NULL;
++        word32 keyPairLen = 0;
++
++        if ((wc_Snova2454_UnwrapPrivateKeyData(keyData, (word32)keyLen,
++                    &keyPair, &keyPairLen) != 0) ||
++                (wc_Snova2454_Init(&key) != 0) ||
++                (wc_Snova2454_ImportPrivateKeyPair(keyPair, keyPairLen,
++                    &key) != 0)) {
++            ret = ASN_PARSE_E;
++        }
++        else {
++            *keyFormat = SNOVA2454k;
++            *keyType = snova2454_sa_algo;
++            *keySize = WC_SNOVA2454_KEYPAIR_SIZE;
++        }
++        wc_Snova2454_Free(&key);
++    }
++    else if ((ret == 0) && (*keyFormat == 0)) {
++        WOLFSSL_MSG("Not a SNOVA-24-5-16-4 key");
++    }
++
++    return ret;
++}
++#endif /* WOLFSSL_SNOVA2454 */
++
+@@ -1146,0 +1339,24 @@ static int ProcessBufferTryDecode(WOLFSSL_CTX* ctx, WOLFSSL* ssl,
++#ifdef WOLFSSL_HAWK512
++    /* Try HAWK-512 if key format is HAWK-512 or yet unknown. */
++    if ((ret == 0) && ((*keyFormat == 0) || (*keyFormat == HAWK512k))) {
++        ret = ProcessBufferTryDecodeHawk512(ctx, ssl, der, keyFormat, keyType,
++            keySz);
++        matchAnyKey = 1;
++    }
++#endif /* WOLFSSL_HAWK512 */
++#ifdef WOLFSSL_MAYO1
++    /* Try MAYO-1 if key format is MAYO-1 or yet unknown. */
++    if ((ret == 0) && ((*keyFormat == 0) || (*keyFormat == MAYO1k))) {
++        ret = ProcessBufferTryDecodeMayo1(ctx, ssl, der, keyFormat, keyType,
++            keySz);
++        matchAnyKey = 1;
++    }
++#endif /* WOLFSSL_MAYO1 */
++#ifdef WOLFSSL_SNOVA2454
++    /* Try SNOVA-24-5-16-4 if key format is SNOVA or yet unknown. */
++    if ((ret == 0) && ((*keyFormat == 0) || (*keyFormat == SNOVA2454k))) {
++        ret = ProcessBufferTryDecodeSnova2454(ctx, ssl, der, keyFormat,
++            keyType, keySz);
++        matchAnyKey = 1;
++    }
++#endif /* WOLFSSL_SNOVA2454 */
+@@ -1555 +1771,3 @@ static void ProcessBufferCertSetHave(WOLFSSL_CTX* ctx, WOLFSSL* ssl,
+-    defined(HAVE_FALCON) || defined(HAVE_DILITHIUM) || !defined(NO_RSA)
++    defined(HAVE_FALCON) || defined(HAVE_DILITHIUM) || !defined(NO_RSA) || \
++    defined(WOLFSSL_HAWK512) || defined(WOLFSSL_MAYO1) || \
++    defined(WOLFSSL_SNOVA2454)
+@@ -1783,0 +2002,27 @@ static int ProcessBufferCertPublicKey(WOLFSSL_CTX* ctx, WOLFSSL* ssl,
++    #ifdef WOLFSSL_HAWK512
++        case HAWK512k:
++            keyType = hawk512_sa_algo;
++            keySz = WC_HAWK512_PUB_SIZE;
++            if (checkKeySz && cert->pubKeySize != WC_HAWK512_PUB_SIZE) {
++                ret = BUFFER_E;
++            }
++            break;
++    #endif /* WOLFSSL_HAWK512 */
++    #ifdef WOLFSSL_MAYO1
++        case MAYO1k:
++            keyType = mayo1_sa_algo;
++            keySz = WC_MAYO1_PUB_SIZE;
++            if (checkKeySz && cert->pubKeySize != WC_MAYO1_PUB_SIZE) {
++                ret = BUFFER_E;
++            }
++            break;
++    #endif /* WOLFSSL_MAYO1 */
++    #ifdef WOLFSSL_SNOVA2454
++        case SNOVA2454k:
++            keyType = snova2454_sa_algo;
++            keySz = WC_SNOVA2454_PUB_SIZE;
++            if (checkKeySz && cert->pubKeySize != WC_SNOVA2454_PUB_SIZE) {
++                ret = BUFFER_E;
++            }
++            break;
++    #endif /* WOLFSSL_SNOVA2454 */
+@@ -6141 +6385,0 @@ int wolfSSL_CTX_SetTmpDH_file(WOLFSSL_CTX* ctx, const char* fname, int format)
+-
+diff --git a/src/tls13.c b/src/tls13.c
+index e46a518..9ff289f 100644
+--- a/src/tls13.c
++++ b/src/tls13.c
+@@ -22,0 +23,12 @@
++#ifdef WOLFSSL_HAWK512
++    #include "hawk512_tls.h"
++#endif
++#ifdef WOLFSSL_MAYO1
++    #include "mayo1_tls.h"
++#endif
++#ifdef WOLFSSL_SNOVA2454
++    #include "snova2454_tls.h"
++#endif
++#ifdef RUNTIME_MEMORY_TLS_PHASES
++    #include "runtime_memory.h"
++#endif
+@@ -177 +189,3 @@ static const byte
+-    defined(HAVE_ED448) || defined(HAVE_FALCON) || defined(HAVE_DILITHIUM)
++    defined(HAVE_ED448) || defined(HAVE_FALCON) || defined(HAVE_DILITHIUM) || \
++    defined(WOLFSSL_HAWK512) || defined(WOLFSSL_MAYO1) || \
++    defined(WOLFSSL_SNOVA2454)
+@@ -8148 +8162,3 @@ static int SendTls13CertificateRequest(WOLFSSL* ssl, byte* reqCtx,
+-     defined(HAVE_ED448) || defined(HAVE_FALCON) || defined(HAVE_DILITHIUM))
++     defined(HAVE_ED448) || defined(HAVE_FALCON) || defined(HAVE_DILITHIUM) || \
++     defined(WOLFSSL_HAWK512) || defined(WOLFSSL_MAYO1) || \
++     defined(WOLFSSL_SNOVA2454))
+@@ -8245,0 +8262,18 @@ static WC_INLINE void EncodeSigAlg(const WOLFSSL * ssl, byte hashAlgo,
++#endif
++#ifdef WOLFSSL_HAWK512
++        case hawk512_sa_algo:
++            output[0] = HAWK512_SA_MAJOR;
++            output[1] = HAWK512_SA_MINOR;
++            break;
++#endif
++#ifdef WOLFSSL_MAYO1
++        case mayo1_sa_algo:
++            output[0] = MAYO1_SA_MAJOR;
++            output[1] = MAYO1_SA_MINOR;
++            break;
++#endif
++#ifdef WOLFSSL_SNOVA2454
++        case snova2454_sa_algo:
++            output[0] = SNOVA2454_SA_MAJOR;
++            output[1] = SNOVA2454_SA_MINOR;
++            break;
+@@ -8254 +8288,3 @@ static WC_INLINE void EncodeSigAlg(const WOLFSSL * ssl, byte hashAlgo,
+-    defined(HAVE_ED448) || defined(HAVE_FALCON) || defined(HAVE_DILITHIUM)
++    defined(HAVE_ED448) || defined(HAVE_FALCON) || defined(HAVE_DILITHIUM) || \
++    defined(WOLFSSL_HAWK512) || defined(WOLFSSL_MAYO1) || \
++    defined(WOLFSSL_SNOVA2454)
+@@ -8438,0 +8475,18 @@ static WC_INLINE int DecodeTls13SigAlg(byte* input, byte* hashAlgo,
++            #if defined(WOLFSSL_HAWK512)
++            else if (input[1] == HAWK512_SA_MINOR) {
++                *hsType = hawk512_sa_algo;
++                *hashAlgo = sha512_mac;
++            }
++            #endif
++            #if defined(WOLFSSL_MAYO1)
++            else if (input[1] == MAYO1_SA_MINOR) {
++                *hsType = mayo1_sa_algo;
++                *hashAlgo = sha256_mac;
++            }
++            #endif
++            #if defined(WOLFSSL_SNOVA2454)
++            else if (input[1] == SNOVA2454_SA_MINOR) {
++                *hsType = snova2454_sa_algo;
++                *hashAlgo = sha256_mac;
++            }
++            #endif
+@@ -8442,0 +8497,44 @@ static WC_INLINE int DecodeTls13SigAlg(byte* input, byte* hashAlgo,
++#if defined(WOLFSSL_HAWK512) && !defined(HAVE_FALCON)
++        case HAWK512_SA_MAJOR:
++            if (input[1] == HAWK512_SA_MINOR) {
++                *hsType = hawk512_sa_algo;
++                *hashAlgo = sha512_mac;
++            }
++            #if defined(WOLFSSL_MAYO1)
++            else if (input[1] == MAYO1_SA_MINOR) {
++                *hsType = mayo1_sa_algo;
++                *hashAlgo = sha256_mac;
++            }
++            #endif
++            #if defined(WOLFSSL_SNOVA2454)
++            else if (input[1] == SNOVA2454_SA_MINOR) {
++                *hsType = snova2454_sa_algo;
++                *hashAlgo = sha256_mac;
++            }
++            #endif
++            else
++                ret = INVALID_PARAMETER;
++            break;
++#endif /* WOLFSSL_HAWK512 && !HAVE_FALCON */
++#if defined(WOLFSSL_MAYO1) || defined(WOLFSSL_SNOVA2454)
++        case MAYO1_SA_MAJOR:
++            #if defined(WOLFSSL_MAYO1)
++            if (input[1] == MAYO1_SA_MINOR) {
++                *hsType = mayo1_sa_algo;
++                *hashAlgo = sha256_mac;
++            }
++            #endif
++            #if defined(WOLFSSL_SNOVA2454)
++            #if defined(WOLFSSL_MAYO1)
++            else if (input[1] == SNOVA2454_SA_MINOR) {
++            #else
++            if (input[1] == SNOVA2454_SA_MINOR) {
++            #endif
++                *hsType = snova2454_sa_algo;
++                *hashAlgo = sha256_mac;
++            }
++            #endif
++            else
++                ret = INVALID_PARAMETER;
++            break;
++#endif /* WOLFSSL_MAYO1 || WOLFSSL_SNOVA2454 */
+@@ -9398 +9496,2 @@ static int SendTls13Certificate(WOLFSSL* ssl)
+-     defined(HAVE_DILITHIUM)) && \
++     defined(HAVE_DILITHIUM) || defined(WOLFSSL_HAWK512) || \
++     defined(WOLFSSL_MAYO1) || defined(WOLFSSL_SNOVA2454)) && \
+@@ -9654,0 +9754,15 @@ static int SendTls13CertificateVerify(WOLFSSL* ssl)
++        #ifdef WOLFSSL_HAWK512
++            else if (ssl->hsType == DYNAMIC_TYPE_HAWK512) {
++                args->sigAlgo = ssl->buffers.keyType;
++            }
++        #endif /* WOLFSSL_HAWK512 */
++        #ifdef WOLFSSL_MAYO1
++            else if (ssl->hsType == DYNAMIC_TYPE_MAYO1) {
++                args->sigAlgo = ssl->buffers.keyType;
++            }
++        #endif /* WOLFSSL_MAYO1 */
++        #ifdef WOLFSSL_SNOVA2454
++            else if (ssl->hsType == DYNAMIC_TYPE_SNOVA2454) {
++                args->sigAlgo = ssl->buffers.keyType;
++            }
++        #endif /* WOLFSSL_SNOVA2454 */
+@@ -9820,0 +9935,15 @@ static int SendTls13CertificateVerify(WOLFSSL* ssl)
++        #ifdef WOLFSSL_HAWK512
++            if (ssl->hsType == DYNAMIC_TYPE_HAWK512) {
++                args->sigLen = WC_HAWK512_SIG_SIZE;
++            }
++        #endif /* WOLFSSL_HAWK512 */
++        #ifdef WOLFSSL_MAYO1
++            if (ssl->hsType == DYNAMIC_TYPE_MAYO1) {
++                args->sigLen = WC_MAYO1_SIG_SIZE;
++            }
++        #endif /* WOLFSSL_MAYO1 */
++        #ifdef WOLFSSL_SNOVA2454
++            if (ssl->hsType == DYNAMIC_TYPE_SNOVA2454) {
++                args->sigLen = WC_SNOVA2454_SIG_SIZE;
++            }
++        #endif /* WOLFSSL_SNOVA2454 */
+@@ -9866,0 +9996,3 @@ static int SendTls13CertificateVerify(WOLFSSL* ssl)
++#ifdef RUNTIME_MEMORY_TLS_PHASES
++            runtime_memory_set_stage(RUNTIME_MEM_STAGE_CLIENT_CERT_VERIFY);
++#endif
+@@ -9944,0 +10077,25 @@ static int SendTls13CertificateVerify(WOLFSSL* ssl)
++        #ifdef WOLFSSL_HAWK512
++            if (ssl->hsType == DYNAMIC_TYPE_HAWK512) {
++                ret = wc_Hawk512_Sign(args->sigData, args->sigDataSz,
++                                      sigOut, &args->sigLen,
++                                      (wc_Hawk512Key*)ssl->hsKey, ssl->rng);
++                args->length = (word16)args->sigLen;
++            }
++        #endif /* WOLFSSL_HAWK512 */
++        #ifdef WOLFSSL_MAYO1
++            if (ssl->hsType == DYNAMIC_TYPE_MAYO1) {
++                ret = wc_Mayo1_Sign(args->sigData, args->sigDataSz,
++                                    sigOut, &args->sigLen,
++                                    (wc_Mayo1Key*)ssl->hsKey, ssl->rng);
++                args->length = (word16)args->sigLen;
++            }
++        #endif /* WOLFSSL_MAYO1 */
++        #ifdef WOLFSSL_SNOVA2454
++            if (ssl->hsType == DYNAMIC_TYPE_SNOVA2454) {
++                ret = wc_Snova2454_Sign(args->sigData, args->sigDataSz,
++                                        sigOut, &args->sigLen,
++                                        (wc_Snova2454Key*)ssl->hsKey,
++                                        ssl->rng);
++                args->length = (word16)args->sigLen;
++            }
++        #endif /* WOLFSSL_SNOVA2454 */
+@@ -10221,0 +10379,3 @@ exit_scv:
++#ifdef RUNTIME_MEMORY_TLS_PHASES
++    runtime_memory_set_stage(RUNTIME_MEM_STAGE_TLS_HANDSHAKE);
++#endif
+@@ -10767,0 +10928,21 @@ static int DoTls13CertificateVerify(WOLFSSL* ssl, byte* input,
++        #ifdef WOLFSSL_HAWK512
++            if (ssl->options.peerSigAlgo == hawk512_sa_algo) {
++                WOLFSSL_MSG("Peer sent HAWK-512 sig");
++                validSigAlgo = (ssl->peerHawk512Key != NULL) &&
++                               ssl->peerHawk512KeyPresent;
++            }
++        #endif
++        #ifdef WOLFSSL_MAYO1
++            if (ssl->options.peerSigAlgo == mayo1_sa_algo) {
++                WOLFSSL_MSG("Peer sent MAYO-1 sig");
++                validSigAlgo = (ssl->peerMayo1Key != NULL) &&
++                               ssl->peerMayo1KeyPresent;
++            }
++        #endif
++        #ifdef WOLFSSL_SNOVA2454
++            if (ssl->options.peerSigAlgo == snova2454_sa_algo) {
++                WOLFSSL_MSG("Peer sent SNOVA-24-5-16-4 sig");
++                validSigAlgo = (ssl->peerSnova2454Key != NULL) &&
++                               ssl->peerSnova2454KeyPresent;
++            }
++        #endif
+@@ -10902,0 +11084,3 @@ static int DoTls13CertificateVerify(WOLFSSL* ssl, byte* input,
++#ifdef RUNTIME_MEMORY_TLS_PHASES
++            runtime_memory_set_stage(RUNTIME_MEM_STAGE_SERVER_CERT_VERIFY);
++#endif
+@@ -11074,0 +11259,66 @@ static int DoTls13CertificateVerify(WOLFSSL* ssl, byte* input,
++        #ifdef WOLFSSL_HAWK512
++            if ((ssl->options.peerSigAlgo == hawk512_sa_algo) &&
++                (ssl->peerHawk512KeyPresent)) {
++                int res = 0;
++                WOLFSSL_MSG("Doing HAWK-512 peer cert verify");
++                ret = wc_Hawk512_Verify(sig, args->sigSz,
++                                        args->sigData, args->sigDataSz,
++                                        &res, ssl->peerHawk512Key);
++
++                if ((ret >= 0) && (res == 1)) {
++                    ssl->options.peerAuthGood = 1;
++
++                    FreeKey(ssl, DYNAMIC_TYPE_HAWK512,
++                            (void**)&ssl->peerHawk512Key);
++                    ssl->peerHawk512KeyPresent = 0;
++                }
++                else if ((ret >= 0) && (res == 0)) {
++                    WOLFSSL_MSG("HAWK-512 signature verification failed");
++                    ret = SIG_VERIFY_E;
++                }
++            }
++        #endif /* WOLFSSL_HAWK512 */
++        #ifdef WOLFSSL_MAYO1
++            if ((ssl->options.peerSigAlgo == mayo1_sa_algo) &&
++                (ssl->peerMayo1KeyPresent)) {
++                int res = 0;
++                WOLFSSL_MSG("Doing MAYO-1 peer cert verify");
++                ret = wc_Mayo1_Verify(sig, args->sigSz,
++                                      args->sigData, args->sigDataSz,
++                                      &res, ssl->peerMayo1Key);
++
++                if ((ret >= 0) && (res == 1)) {
++                    ssl->options.peerAuthGood = 1;
++
++                    FreeKey(ssl, DYNAMIC_TYPE_MAYO1,
++                            (void**)&ssl->peerMayo1Key);
++                    ssl->peerMayo1KeyPresent = 0;
++                }
++                else if ((ret >= 0) && (res == 0)) {
++                    WOLFSSL_MSG("MAYO-1 signature verification failed");
++                    ret = SIG_VERIFY_E;
++                }
++            }
++        #endif /* WOLFSSL_MAYO1 */
++        #ifdef WOLFSSL_SNOVA2454
++            if ((ssl->options.peerSigAlgo == snova2454_sa_algo) &&
++                (ssl->peerSnova2454KeyPresent)) {
++                int res = 0;
++                WOLFSSL_MSG("Doing SNOVA-24-5-16-4 peer cert verify");
++                ret = wc_Snova2454_Verify(sig, args->sigSz,
++                                          args->sigData, args->sigDataSz,
++                                          &res, ssl->peerSnova2454Key);
++
++                if ((ret >= 0) && (res == 1)) {
++                    ssl->options.peerAuthGood = 1;
++
++                    FreeKey(ssl, DYNAMIC_TYPE_SNOVA2454,
++                            (void**)&ssl->peerSnova2454Key);
++                    ssl->peerSnova2454KeyPresent = 0;
++                }
++                else if ((ret >= 0) && (res == 0)) {
++                    WOLFSSL_MSG("SNOVA-24-5-16-4 signature verification failed");
++                    ret = SIG_VERIFY_E;
++                }
++            }
++        #endif /* WOLFSSL_SNOVA2454 */
+@@ -11276,0 +11527,3 @@ exit_dcv:
++#ifdef RUNTIME_MEMORY_TLS_PHASES
++    runtime_memory_set_stage(RUNTIME_MEM_STAGE_TLS_HANDSHAKE);
++#endif
+@@ -13271 +13524,3 @@ int DoTls13HandShakeMsgType(WOLFSSL* ssl, byte* input, word32* inOutIdx,
+-    defined(HAVE_ED448) || defined(HAVE_FALCON) || defined(HAVE_DILITHIUM)
++    defined(HAVE_ED448) || defined(HAVE_FALCON) || defined(HAVE_DILITHIUM) || \
++    defined(WOLFSSL_HAWK512) || defined(WOLFSSL_MAYO1) || \
++    defined(WOLFSSL_SNOVA2454)
+@@ -13958 +14213,3 @@ int wolfSSL_connect_TLSv13(WOLFSSL* ssl)
+-             defined(HAVE_FALCON) || defined(HAVE_DILITHIUM))) && \
++             defined(HAVE_FALCON) || defined(HAVE_DILITHIUM) || \
++             defined(WOLFSSL_HAWK512) || defined(WOLFSSL_MAYO1) || \
++             defined(WOLFSSL_SNOVA2454))) && \
+@@ -15120 +15377,2 @@ int wolfSSL_accept_TLSv13(WOLFSSL* ssl)
+-     defined(HAVE_DILITHIUM))
++     defined(HAVE_DILITHIUM) || defined(WOLFSSL_HAWK512) || \
++     defined(WOLFSSL_MAYO1) || defined(WOLFSSL_SNOVA2454))
+diff --git a/wolfcrypt/src/asn.c b/wolfcrypt/src/asn.c
+index fea4498..05f57cd 100644
+--- a/wolfcrypt/src/asn.c
++++ b/wolfcrypt/src/asn.c
+@@ -232,0 +233,9 @@ ASN Options:
++#ifdef WOLFSSL_HAWK512
++    #include "hawk512_tls.h"
++#endif
++#ifdef WOLFSSL_MAYO1
++    #include "mayo1_tls.h"
++#endif
++#ifdef WOLFSSL_SNOVA2454
++    #include "snova2454_tls.h"
++#endif
+@@ -4574,2 +4583,2 @@ static int ParseCRL_Extensions(DecodedCRL* dcrl, const byte* buf, word32* inOutI
+-    /* Falcon Level 1: 1 3 9999 3 6 */
+-    static const byte sigFalcon_Level1Oid[] = {43, 206, 15, 3, 6};
++    /* Falcon Level 1: 1.3.9999.3.11 */
++    static const byte sigFalcon_Level1Oid[] = {43, 206, 15, 3, 11};
+@@ -4577,2 +4586,2 @@ static int ParseCRL_Extensions(DecodedCRL* dcrl, const byte* buf, word32* inOutI
+-    /* Falcon Level 5: 1 3 9999 3 9 */
+-    static const byte sigFalcon_Level5Oid[] = {43, 206, 15, 3, 9};
++    /* Falcon Level 5: 1.3.9999.3.14 */
++    static const byte sigFalcon_Level5Oid[] = {43, 206, 15, 3, 14};
+@@ -4579,0 +4589,15 @@ static int ParseCRL_Extensions(DecodedCRL* dcrl, const byte* buf, word32* inOutI
++#ifdef WOLFSSL_HAWK512
++    /* HAWK-512: 1.3.6.1.4.1.99999.1.1 */
++    static const byte sigHawk512Oid[] =
++        {43, 6, 1, 4, 1, 134, 141, 31, 1, 1};
++#endif /* WOLFSSL_HAWK512 */
++#ifdef WOLFSSL_MAYO1
++    /* MAYO-1: 1.3.9999.8.1.3 */
++    static const byte sigMayo1Oid[] =
++        {43, 206, 15, 8, 1, 3};
++#endif /* WOLFSSL_MAYO1 */
++#ifdef WOLFSSL_SNOVA2454
++    /* SNOVA-24-5-16-4 / snova2454: 1.3.9999.10.1.1 */
++    static const byte sigSnova2454Oid[] =
++        {43, 206, 15, 10, 1, 1};
++#endif /* WOLFSSL_SNOVA2454 */
+@@ -4662,2 +4686,2 @@ static int ParseCRL_Extensions(DecodedCRL* dcrl, const byte* buf, word32* inOutI
+-    /* Falcon Level 1: 1 3 9999 3 6 */
+-    static const byte keyFalcon_Level1Oid[] = {43, 206, 15, 3, 6};
++    /* Falcon Level 1: 1.3.9999.3.11 */
++    static const byte keyFalcon_Level1Oid[] = {43, 206, 15, 3, 11};
+@@ -4665,2 +4689,2 @@ static int ParseCRL_Extensions(DecodedCRL* dcrl, const byte* buf, word32* inOutI
+-    /* Falcon Level 5: 1 3 9999 3 9 */
+-    static const byte keyFalcon_Level5Oid[] = {43, 206, 15, 3, 9};
++    /* Falcon Level 5: 1.3.9999.3.14 */
++    static const byte keyFalcon_Level5Oid[] = {43, 206, 15, 3, 14};
+@@ -4667,0 +4692,15 @@ static int ParseCRL_Extensions(DecodedCRL* dcrl, const byte* buf, word32* inOutI
++#ifdef WOLFSSL_HAWK512
++    /* HAWK-512: 1.3.6.1.4.1.99999.1.1 */
++    static const byte keyHawk512Oid[] =
++        {43, 6, 1, 4, 1, 134, 141, 31, 1, 1};
++#endif /* WOLFSSL_HAWK512 */
++#ifdef WOLFSSL_MAYO1
++    /* MAYO-1: 1.3.9999.8.1.3 */
++    static const byte keyMayo1Oid[] =
++        {43, 206, 15, 8, 1, 3};
++#endif /* WOLFSSL_MAYO1 */
++#ifdef WOLFSSL_SNOVA2454
++    /* SNOVA-24-5-16-4 / snova2454: 1.3.9999.10.1.1 */
++    static const byte keySnova2454Oid[] =
++        {43, 206, 15, 10, 1, 1};
++#endif /* WOLFSSL_SNOVA2454 */
+@@ -5521,0 +5561,18 @@ const byte* OidFromId(word32 id, word32 type, word32* oidSz)
++                #ifdef WOLFSSL_HAWK512
++                case CTC_HAWK512:
++                    oid = sigHawk512Oid;
++                    *oidSz = sizeof(sigHawk512Oid);
++                    break;
++                #endif /* WOLFSSL_HAWK512 */
++                #ifdef WOLFSSL_MAYO1
++                case CTC_MAYO1:
++                    oid = sigMayo1Oid;
++                    *oidSz = sizeof(sigMayo1Oid);
++                    break;
++                #endif /* WOLFSSL_MAYO1 */
++                #ifdef WOLFSSL_SNOVA2454
++                case CTC_SNOVA2454:
++                    oid = sigSnova2454Oid;
++                    *oidSz = sizeof(sigSnova2454Oid);
++                    break;
++                #endif /* WOLFSSL_SNOVA2454 */
+@@ -5646,0 +5704,18 @@ const byte* OidFromId(word32 id, word32 type, word32* oidSz)
++                #ifdef WOLFSSL_HAWK512
++                case HAWK512k:
++                    oid = keyHawk512Oid;
++                    *oidSz = sizeof(keyHawk512Oid);
++                    break;
++                #endif /* WOLFSSL_HAWK512 */
++                #ifdef WOLFSSL_MAYO1
++                case MAYO1k:
++                    oid = keyMayo1Oid;
++                    *oidSz = sizeof(keyMayo1Oid);
++                    break;
++                #endif /* WOLFSSL_MAYO1 */
++                #ifdef WOLFSSL_SNOVA2454
++                case SNOVA2454k:
++                    oid = keySnova2454Oid;
++                    *oidSz = sizeof(keySnova2454Oid);
++                    break;
++                #endif /* WOLFSSL_SNOVA2454 */
+@@ -7336,0 +7412,18 @@ static int GetOID(const byte* input, word32* inOutIdx, word32* oid,
++        #ifdef WOLFSSL_SNOVA2454
++            {
++                word32 dbg_i;
++                printf("[asn-debug] OID check failed type=%u sum=0x%08lx "
++                       "actualSz=%lu checkSz=%lu actual=",
++                       (unsigned)oidType, (unsigned long)*oid,
++                       (unsigned long)actualOidSz,
++                       (unsigned long)checkOidSz);
++                for (dbg_i = 0; dbg_i < actualOidSz; dbg_i++) {
++                    printf("%02x", actualOid[dbg_i]);
++                }
++                printf(" check=");
++                for (dbg_i = 0; dbg_i < checkOidSz; dbg_i++) {
++                    printf("%02x", checkOid[dbg_i]);
++                }
++                printf("\n");
++            }
++        #endif
+@@ -12099 +12192,3 @@ void wc_FreeDecodedCert(DecodedCert* cert)
+-    defined(HAVE_DILITHIUM) || defined(HAVE_SPHINCS)
++    defined(HAVE_DILITHIUM) || defined(HAVE_SPHINCS) || \
++    defined(WOLFSSL_HAWK512) || defined(WOLFSSL_MAYO1) || \
++    defined(WOLFSSL_SNOVA2454)
+@@ -12989,0 +13085,18 @@ static int GetCertKey(DecodedCert* cert, const byte* source, word32* inOutIdx,
++    #ifdef WOLFSSL_HAWK512
++        case HAWK512k:
++            cert->pkCurveOID = HAWK512k;
++            ret = StoreKey(cert, source, &srcIdx, maxIdx);
++            break;
++    #endif /* WOLFSSL_HAWK512 */
++    #ifdef WOLFSSL_MAYO1
++        case MAYO1k:
++            cert->pkCurveOID = MAYO1k;
++            ret = StoreKey(cert, source, &srcIdx, maxIdx);
++            break;
++    #endif /* WOLFSSL_MAYO1 */
++    #ifdef WOLFSSL_SNOVA2454
++        case SNOVA2454k:
++            cert->pkCurveOID = SNOVA2454k;
++            ret = StoreKey(cert, source, &srcIdx, maxIdx);
++            break;
++    #endif /* WOLFSSL_SNOVA2454 */
+@@ -13036,0 +13150,4 @@ static int GetCertKey(DecodedCert* cert, const byte* source, word32* inOutIdx,
++        #ifdef WOLFSSL_SNOVA2454
++            printf("[asn-debug] Unknown key OID in GetCertKey: 0x%08lx\n",
++                   (unsigned long)cert->keyOID);
++        #endif
+@@ -15846,0 +15964,28 @@ void FreeSignatureCtx(SignatureCtx* sigCtx)
++        #ifdef WOLFSSL_HAWK512
++            case HAWK512k:
++                wc_Hawk512_Free(sigCtx->key.hawk512);
++            #ifndef WOLFSSL_NO_MALLOC
++                XFREE(sigCtx->key.hawk512, sigCtx->heap, DYNAMIC_TYPE_HAWK512);
++                sigCtx->key.hawk512 = NULL;
++            #endif
++                break;
++        #endif /* WOLFSSL_HAWK512 */
++        #ifdef WOLFSSL_MAYO1
++            case MAYO1k:
++                wc_Mayo1_Free(sigCtx->key.mayo1);
++            #ifndef WOLFSSL_NO_MALLOC
++                XFREE(sigCtx->key.mayo1, sigCtx->heap, DYNAMIC_TYPE_MAYO1);
++                sigCtx->key.mayo1 = NULL;
++            #endif
++                break;
++        #endif /* WOLFSSL_MAYO1 */
++        #ifdef WOLFSSL_SNOVA2454
++            case SNOVA2454k:
++                wc_Snova2454_Free(sigCtx->key.snova2454);
++            #ifndef WOLFSSL_NO_MALLOC
++                XFREE(sigCtx->key.snova2454, sigCtx->heap,
++                    DYNAMIC_TYPE_SNOVA2454);
++                sigCtx->key.snova2454 = NULL;
++            #endif
++                break;
++        #endif /* WOLFSSL_SNOVA2454 */
+@@ -16031,0 +16177,15 @@ static int HashForSignature(const byte* buf, word32 bufSz, word32 sigOID,
++    #ifdef WOLFSSL_HAWK512
++        case CTC_HAWK512:
++            /* Hashes done in signing operation. */
++            break;
++    #endif
++    #ifdef WOLFSSL_MAYO1
++        case CTC_MAYO1:
++            /* Hashes done in signing operation. */
++            break;
++    #endif
++    #ifdef WOLFSSL_SNOVA2454
++        case CTC_SNOVA2454:
++            /* Hashes done in signing operation. */
++            break;
++    #endif
+@@ -16185,0 +16346,12 @@ static int SigOidMatchesKeyOid(word32 sigOID, word32 keyOID)
++    #if defined(WOLFSSL_HAWK512)
++        case HAWK512k:
++            return (sigOID == CTC_HAWK512);
++    #endif
++    #if defined(WOLFSSL_MAYO1)
++        case MAYO1k:
++            return (sigOID == CTC_MAYO1);
++    #endif
++    #if defined(WOLFSSL_SNOVA2454)
++        case SNOVA2454k:
++            return (sigOID == CTC_SNOVA2454);
++    #endif
+@@ -16608,0 +16781,72 @@ int ConfirmSignature(SignatureCtx* sigCtx,
++            #ifdef WOLFSSL_HAWK512
++                case HAWK512k:
++                {
++                    sigCtx->verify = 0;
++                #ifndef WOLFSSL_NO_MALLOC
++                    sigCtx->key.hawk512 = (wc_Hawk512Key*)XMALLOC(
++                        sizeof(wc_Hawk512Key), sigCtx->heap,
++                        DYNAMIC_TYPE_HAWK512);
++                    if (sigCtx->key.hawk512 == NULL) {
++                        ERROR_OUT(MEMORY_E, exit_cs);
++                    }
++                #endif
++                    if ((ret = wc_Hawk512_Init(sigCtx->key.hawk512)) != 0) {
++                        goto exit_cs;
++                    }
++                    if ((ret = wc_Hawk512_ImportPublic(key, keySz,
++                            sigCtx->key.hawk512)) != 0) {
++                        WOLFSSL_MSG("ASN Key import error HAWK-512");
++                        WOLFSSL_ERROR_VERBOSE(ret);
++                        goto exit_cs;
++                    }
++                    break;
++                }
++            #endif /* WOLFSSL_HAWK512 */
++            #ifdef WOLFSSL_MAYO1
++                case MAYO1k:
++                {
++                    sigCtx->verify = 0;
++                #ifndef WOLFSSL_NO_MALLOC
++                    sigCtx->key.mayo1 = (wc_Mayo1Key*)XMALLOC(
++                        sizeof(wc_Mayo1Key), sigCtx->heap,
++                        DYNAMIC_TYPE_MAYO1);
++                    if (sigCtx->key.mayo1 == NULL) {
++                        ERROR_OUT(MEMORY_E, exit_cs);
++                    }
++                #endif
++                    if ((ret = wc_Mayo1_Init(sigCtx->key.mayo1)) != 0) {
++                        goto exit_cs;
++                    }
++                    if ((ret = wc_Mayo1_ImportPublic(key, keySz,
++                            sigCtx->key.mayo1)) != 0) {
++                        WOLFSSL_MSG("ASN Key import error MAYO-1");
++                        WOLFSSL_ERROR_VERBOSE(ret);
++                        goto exit_cs;
++                    }
++                    break;
++                }
++            #endif /* WOLFSSL_MAYO1 */
++            #ifdef WOLFSSL_SNOVA2454
++                case SNOVA2454k:
++                {
++                    sigCtx->verify = 0;
++                #ifndef WOLFSSL_NO_MALLOC
++                    sigCtx->key.snova2454 = (wc_Snova2454Key*)XMALLOC(
++                        sizeof(wc_Snova2454Key), sigCtx->heap,
++                        DYNAMIC_TYPE_SNOVA2454);
++                    if (sigCtx->key.snova2454 == NULL) {
++                        ERROR_OUT(MEMORY_E, exit_cs);
++                    }
++                #endif
++                    if ((ret = wc_Snova2454_Init(sigCtx->key.snova2454)) != 0) {
++                        goto exit_cs;
++                    }
++                    if ((ret = wc_Snova2454_ImportPublic(key, keySz,
++                            sigCtx->key.snova2454)) != 0) {
++                        WOLFSSL_MSG("ASN Key import error SNOVA-24-5-16-4");
++                        WOLFSSL_ERROR_VERBOSE(ret);
++                        goto exit_cs;
++                    }
++                    break;
++                }
++            #endif /* WOLFSSL_SNOVA2454 */
+@@ -16843,0 +17088,5 @@ int ConfirmSignature(SignatureCtx* sigCtx,
++                #ifdef WOLFSSL_SNOVA2454
++                    printf("[asn-debug] Verify key type unknown: keyOID=0x%08lx "
++                           "sigOID=0x%08lx\n", (unsigned long)keyOID,
++                           (unsigned long)sigOID);
++                #endif
+@@ -17043,0 +17293,27 @@ int ConfirmSignature(SignatureCtx* sigCtx,
++            #ifdef WOLFSSL_HAWK512
++                case HAWK512k:
++                {
++                    ret = wc_Hawk512_Verify(sig, sigSz, buf, bufSz,
++                                            &sigCtx->verify,
++                                            sigCtx->key.hawk512);
++                    break;
++                }
++            #endif /* WOLFSSL_HAWK512 */
++            #ifdef WOLFSSL_MAYO1
++                case MAYO1k:
++                {
++                    ret = wc_Mayo1_Verify(sig, sigSz, buf, bufSz,
++                                          &sigCtx->verify,
++                                          sigCtx->key.mayo1);
++                    break;
++                }
++            #endif /* WOLFSSL_MAYO1 */
++            #ifdef WOLFSSL_SNOVA2454
++                case SNOVA2454k:
++                {
++                    ret = wc_Snova2454_Verify(sig, sigSz, buf, bufSz,
++                                              &sigCtx->verify,
++                                              sigCtx->key.snova2454);
++                    break;
++                }
++            #endif /* WOLFSSL_SNOVA2454 */
+@@ -17307,0 +17584,42 @@ int ConfirmSignature(SignatureCtx* sigCtx,
++            #ifdef WOLFSSL_HAWK512
++                case HAWK512k:
++                {
++                    if (sigCtx->verify == 1) {
++                        ret = 0;
++                    }
++                    else {
++                        WOLFSSL_MSG("HAWK512 Verify didn't match");
++                        ret = ASN_SIG_CONFIRM_E;
++                        WOLFSSL_ERROR_VERBOSE(ret);
++                    }
++                    break;
++                }
++            #endif /* WOLFSSL_HAWK512 */
++            #ifdef WOLFSSL_MAYO1
++                case MAYO1k:
++                {
++                    if (sigCtx->verify == 1) {
++                        ret = 0;
++                    }
++                    else {
++                        WOLFSSL_MSG("MAYO1 Verify didn't match");
++                        ret = ASN_SIG_CONFIRM_E;
++                        WOLFSSL_ERROR_VERBOSE(ret);
++                    }
++                    break;
++                }
++            #endif /* WOLFSSL_MAYO1 */
++            #ifdef WOLFSSL_SNOVA2454
++                case SNOVA2454k:
++                {
++                    if (sigCtx->verify == 1) {
++                        ret = 0;
++                    }
++                    else {
++                        WOLFSSL_MSG("SNOVA-24-5-16-4 Verify didn't match");
++                        ret = ASN_SIG_CONFIRM_E;
++                        WOLFSSL_ERROR_VERBOSE(ret);
++                    }
++                    break;
++                }
++            #endif /* WOLFSSL_SNOVA2454 */
+diff --git a/wolfcrypt/src/falcon.c b/wolfcrypt/src/falcon.c
+index 82705e2..e6ff52b 100644
+--- a/wolfcrypt/src/falcon.c
++++ b/wolfcrypt/src/falcon.c
+@@ -32,0 +33,3 @@
++#ifdef WOLFSSL_FALCON512_PQCLEAN
++#include "../../../PQClean/crypto_sign/falcon-512/clean/api.h"
++#endif
+@@ -83 +86,20 @@ int wc_falcon_sign_msg(const byte* in, word32 inLen,
+-#ifdef HAVE_LIBOQS
++#ifdef WOLFSSL_FALCON512_PQCLEAN
++    if ((ret == 0) && (!key->prvKeySet)) {
++        ret = BAD_FUNC_ARG;
++    }
++    if ((ret == 0) && (key->level != 1)) {
++        ret = SIG_TYPE_E;
++    }
++    if ((ret == 0) && (*outLen < FALCON_LEVEL1_SIG_SIZE)) {
++        *outLen = FALCON_LEVEL1_SIG_SIZE;
++        ret = BUFFER_E;
++    }
++    if (ret == 0) {
++        size_t localOutLen = *outLen;
++        ret = PQCLEAN_FALCON512_CLEAN_crypto_sign_signature(
++            out, &localOutLen, in, inLen, key->k);
++        if (ret == 0) {
++            *outLen = (word32)localOutLen;
++        }
++    }
++#elif defined(HAVE_LIBOQS)
+@@ -175 +197,15 @@ int wc_falcon_verify_msg(const byte* sig, word32 sigLen, const byte* msg,
+-#ifdef HAVE_LIBOQS
++#ifdef WOLFSSL_FALCON512_PQCLEAN
++    if ((ret == 0) && (!key->pubKeySet)) {
++        ret = BAD_FUNC_ARG;
++    }
++    if ((ret == 0) && (key->level != 1)) {
++        ret = SIG_TYPE_E;
++    }
++    if ((ret == 0) && (PQCLEAN_FALCON512_CLEAN_crypto_sign_verify(
++            sig, sigLen, msg, msgLen, key->p) != 0)) {
++        ret = SIG_VERIFY_E;
++    }
++    if (ret == 0) {
++        *res = 1;
++    }
++#elif defined(HAVE_LIBOQS)
+diff --git a/wolfssl/internal.h b/wolfssl/internal.h
+index 5e512f7..f6e99ff 100644
+--- a/wolfssl/internal.h
++++ b/wolfssl/internal.h
+@@ -33,0 +34,9 @@
++#ifdef WOLFSSL_HAWK512
++typedef struct wc_Hawk512Key wc_Hawk512Key;
++#endif
++#ifdef WOLFSSL_MAYO1
++typedef struct wc_Mayo1Key wc_Mayo1Key;
++#endif
++#ifdef WOLFSSL_SNOVA2454
++typedef struct wc_Snova2454Key wc_Snova2454Key;
++#endif
+@@ -1768 +1777 @@ enum Misc {
+-    /* These values for falcon match what OQS has defined. */
++    /* These values for Falcon match oqsprovider TLS SignatureScheme values. */
+@@ -1770 +1779 @@ enum Misc {
+-    FALCON_LEVEL1_SA_MINOR = 0xAE,
++    FALCON_LEVEL1_SA_MINOR = 0xD7,
+@@ -1772 +1781 @@ enum Misc {
+-    FALCON_LEVEL5_SA_MINOR = 0xB1,
++    FALCON_LEVEL5_SA_MINOR = 0xDA,
+@@ -1781,0 +1791,6 @@ enum Misc {
++    HAWK512_SA_MAJOR = 0xFE,
++    HAWK512_SA_MINOR = 0x09,
++    MAYO1_SA_MAJOR = 0xFF,
++    MAYO1_SA_MINOR = 0x32,
++    SNOVA2454_SA_MAJOR = 0xFF,
++    SNOVA2454_SA_MINOR = 0x3A,
+@@ -1882 +1897,2 @@ WOLFSSL_LOCAL int NamedGroupIsPqcHybrid(int group);
+-#if defined(HAVE_FALCON) || defined(HAVE_DILITHIUM)
++#if defined(HAVE_FALCON) || defined(HAVE_DILITHIUM) || \
++    defined(WOLFSSL_MAYO1) || defined(WOLFSSL_SNOVA2454)
+@@ -4374,0 +4391,3 @@ enum KeyExchangeAlgorithm {
++#define SIG_HAWK512     0x40
++#define SIG_MAYO1       0x80
++#define SIG_SNOVA2454   0x100
+@@ -4377 +4396,2 @@ enum KeyExchangeAlgorithm {
+-                         SIG_DILITHIUM)
++                         SIG_DILITHIUM | SIG_HAWK512 | SIG_MAYO1 | \
++                         SIG_SNOVA2454)
+@@ -4395,2 +4415,5 @@ enum SignatureAlgorithm {
+-    any_sa_algo                  = 18,
+-    ecc_brainpool_sa_algo        = 19,
++    hawk512_sa_algo              = 18,
++    mayo1_sa_algo                = 19,
++    snova2454_sa_algo            = 20,
++    any_sa_algo                  = 21,
++    ecc_brainpool_sa_algo        = 22,
+@@ -6169,0 +6193,12 @@ struct WOLFSSL {
++#ifdef WOLFSSL_HAWK512
++    wc_Hawk512Key*  peerHawk512Key;
++    byte            peerHawk512KeyPresent;
++#endif
++#ifdef WOLFSSL_MAYO1
++    wc_Mayo1Key*    peerMayo1Key;
++    byte            peerMayo1KeyPresent;
++#endif
++#ifdef WOLFSSL_SNOVA2454
++    wc_Snova2454Key* peerSnova2454Key;
++    byte             peerSnova2454KeyPresent;
++#endif
+diff --git a/wolfssl/wolfcrypt/asn.h b/wolfssl/wolfcrypt/asn.h
+index b3028c9..7182472 100644
+--- a/wolfssl/wolfcrypt/asn.h
++++ b/wolfssl/wolfcrypt/asn.h
+@@ -78,0 +79,9 @@ that can be serialized and deserialized in a cross-platform way.
++#ifdef WOLFSSL_HAWK512
++    #include "hawk512_tls.h"
++#endif
++#ifdef WOLFSSL_MAYO1
++    #include "mayo1_tls.h"
++#endif
++#ifdef WOLFSSL_SNOVA2454
++    #include "snova2454_tls.h"
++#endif
+@@ -881,0 +891,9 @@ extern const WOLFSSL_ObjectInfo wolfssl_object_info[];
++#elif defined(WOLFSSL_HAWK512)
++    /* HAWK-512 has a fixed 555-byte TLS CertificateVerify signature. */
++    #define WC_MAX_CERT_VERIFY_SZ WC_HAWK512_SIG_SIZE
++#elif defined(WOLFSSL_MAYO1)
++    /* MAYO-1 has a fixed 454-byte TLS CertificateVerify signature. */
++    #define WC_MAX_CERT_VERIFY_SZ WC_MAYO1_SIG_SIZE
++#elif defined(WOLFSSL_SNOVA2454)
++    /* SNOVA-24-5-16-4 has a fixed 248-byte CertificateVerify signature. */
++    #define WC_MAX_CERT_VERIFY_SZ WC_SNOVA2454_SIG_SIZE
+@@ -1600,0 +1619,21 @@ struct SignatureCtx {
++    #ifdef WOLFSSL_HAWK512
++        #ifdef WOLFSSL_NO_MALLOC
++        struct wc_Hawk512Key  hawk512[1];
++        #else
++        struct wc_Hawk512Key* hawk512;
++        #endif
++    #endif
++    #ifdef WOLFSSL_MAYO1
++        #ifdef WOLFSSL_NO_MALLOC
++        struct wc_Mayo1Key  mayo1[1];
++        #else
++        struct wc_Mayo1Key* mayo1;
++        #endif
++    #endif
++    #ifdef WOLFSSL_SNOVA2454
++        #ifdef WOLFSSL_NO_MALLOC
++        struct wc_Snova2454Key  snova2454[1];
++        #else
++        struct wc_Snova2454Key* snova2454;
++        #endif
++    #endif
+diff --git a/wolfssl/wolfcrypt/falcon.h b/wolfssl/wolfcrypt/falcon.h
+index 06ded4d..b979149 100644
+--- a/wolfssl/wolfcrypt/falcon.h
++++ b/wolfssl/wolfcrypt/falcon.h
+@@ -62,0 +63,8 @@
++#ifdef WOLFSSL_FALCON512_PQCLEAN
++/* The embedded PQClean adapter implements Falcon-512 only. Avoid sizing each
++ * key object and decoder scratch buffer for the unused Falcon-1024 format. */
++#define FALCON_MAX_KEY_SIZE     FALCON_LEVEL1_KEY_SIZE
++#define FALCON_MAX_SIG_SIZE     FALCON_LEVEL1_SIG_SIZE
++#define FALCON_MAX_PUB_KEY_SIZE FALCON_LEVEL1_PUB_KEY_SIZE
++#define FALCON_MAX_PRV_KEY_SIZE FALCON_LEVEL1_PRV_KEY_SIZE
++#else
+@@ -66,0 +75 @@
++#endif
+diff --git a/wolfssl/wolfcrypt/oid_sum.h b/wolfssl/wolfcrypt/oid_sum.h
+index e1fbee5..5963044 100644
+--- a/wolfssl/wolfcrypt/oid_sum.h
++++ b/wolfssl/wolfcrypt/oid_sum.h
+@@ -183,4 +183,10 @@ enum Key_Sum {
+-    /* 0x2b,0xce,0x0f,0x03,0x06  */
+-    FALCON_LEVEL1k              = 273,           /* 1.3.9999.3.6 */
+-    /* 0x2b,0xce,0x0f,0x03,0x09  */
+-    FALCON_LEVEL5k              = 276,           /* 1.3.9999.3.9 */
++    /* 0x2b,0xce,0x0f,0x03,0x0b  */
++    FALCON_LEVEL1k              = 278,           /* 1.3.9999.3.11 */
++    /* 0x2b,0xce,0x0f,0x03,0x0e  */
++    FALCON_LEVEL5k              = 281,           /* 1.3.9999.3.14 */
++    /* 0x2b,0x06,0x01,0x04,0x01,0x86,0x8d,0x1f,0x01,0x01  */
++    HAWK512k                    = 363,           /* 1.3.6.1.4.1.99999.1.1 */
++    /* 0x2b,0xce,0x0f,0x08,0x01,0x03  */
++    MAYO1k                      = 276,           /* 1.3.9999.8.1.3 */
++    /* 0x2b,0xce,0x0f,0x0a,0x01,0x01  */
++    SNOVA2454k                  = 276,           /* 1.3.9999.10.1.1 */
+@@ -236,4 +242,10 @@ enum Key_Sum {
+-    /* 0x2b,0xce,0x0f,0x03,0x06  */
+-    FALCON_LEVEL1k              = 0x7c0f312d,    /* 1.3.9999.3.6 */
+-    /* 0x2b,0xce,0x0f,0x03,0x09  */
+-    FALCON_LEVEL5k              = 0x7c0f3122,    /* 1.3.9999.3.9 */
++    /* 0x2b,0xce,0x0f,0x03,0x0b  */
++    FALCON_LEVEL1k              = 0x7c0f3120,    /* 1.3.9999.3.11 */
++    /* 0x2b,0xce,0x0f,0x03,0x0e  */
++    FALCON_LEVEL5k              = 0x7c0f3125,    /* 1.3.9999.3.14 */
++    /* 0x2b,0x06,0x01,0x04,0x01,0x86,0x8d,0x1f,0x01,0x01  */
++    HAWK512k                    = 0x1b8c81d4,    /* 1.3.6.1.4.1.99999.1.1 */
++    /* 0x2b,0xce,0x0f,0x08,0x01,0x03  */
++    MAYO1k                      = 0x08f0cd2a,    /* 1.3.9999.8.1.3 */
++    /* 0x2b,0xce,0x0f,0x0a,0x01,0x01  */
++    SNOVA2454k                  = 0x0af0cf2a,    /* 1.3.9999.10.1.1 */
+@@ -1559,4 +1571,10 @@ enum Ctc_SigType {
+-    /* 0x2b,0xce,0x0f,0x03,0x06  */
+-    CTC_FALCON_LEVEL1           = 273,           /* 1.3.9999.3.6 */
+-    /* 0x2b,0xce,0x0f,0x03,0x09  */
+-    CTC_FALCON_LEVEL5           = 276,           /* 1.3.9999.3.9 */
++    /* 0x2b,0xce,0x0f,0x03,0x0b  */
++    CTC_FALCON_LEVEL1           = 278,           /* 1.3.9999.3.11 */
++    /* 0x2b,0xce,0x0f,0x03,0x0e  */
++    CTC_FALCON_LEVEL5           = 281,           /* 1.3.9999.3.14 */
++    /* 0x2b,0x06,0x01,0x04,0x01,0x86,0x8d,0x1f,0x01,0x01  */
++    CTC_HAWK512                 = 363,           /* 1.3.6.1.4.1.99999.1.1 */
++    /* 0x2b,0x06,0x01,0x04,0x01,0x86,0x8d,0x1f,0x01,0x02  */
++    CTC_MAYO1                   = 276,           /* 1.3.9999.8.1.3 */
++    /* 0x2b,0xce,0x0f,0x0a,0x01,0x01  */
++    CTC_SNOVA2454               = 276,           /* 1.3.9999.10.1.1 */
+@@ -1640,4 +1658,8 @@ enum Ctc_SigType {
+-    /* 0x2b,0xce,0x0f,0x03,0x06  */
+-    CTC_FALCON_LEVEL1           = 0x7c0f312d,    /* 1.3.9999.3.6 */
+-    /* 0x2b,0xce,0x0f,0x03,0x09  */
+-    CTC_FALCON_LEVEL5           = 0x7c0f3122,    /* 1.3.9999.3.9 */
++    /* 0x2b,0xce,0x0f,0x03,0x0b  */
++    CTC_FALCON_LEVEL1           = 0x7c0f3120,    /* 1.3.9999.3.11 */
++    /* 0x2b,0xce,0x0f,0x03,0x0e  */
++    CTC_FALCON_LEVEL5           = 0x7c0f3125,    /* 1.3.9999.3.14 */
++    /* 0x2b,0x06,0x01,0x04,0x01,0x86,0x8d,0x1f,0x01,0x01  */
++    CTC_HAWK512                 = 0x1b8c81d4,    /* 1.3.6.1.4.1.99999.1.1 */
++    CTC_MAYO1                   = 0x08f0cd2a,    /* 1.3.9999.8.1.3 */
++    CTC_SNOVA2454               = 0x0af0cf2a,    /* 1.3.9999.10.1.1 */
+diff --git a/wolfssl/wolfcrypt/types.h b/wolfssl/wolfcrypt/types.h
+index ec1e87a..41b0761 100644
+--- a/wolfssl/wolfcrypt/types.h
++++ b/wolfssl/wolfcrypt/types.h
+@@ -1383,0 +1384,3 @@ enum {
++    DYNAMIC_TYPE_HAWK512      = 109,
++    DYNAMIC_TYPE_MAYO1        = 110,
++    DYNAMIC_TYPE_SNOVA2454    = 111,
