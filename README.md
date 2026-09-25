@@ -41,7 +41,7 @@ no-encryption baseline:
 | RSA-2048 | Common classical baseline |
 | ML-DSA-44 | Standardized post-quantum signature |
 | Falcon-512 | Compact post-quantum signature candidate |
-| HAWK-512 | Post-quantum candidate |
+| HAWK-512 | Post-quantum candidate (Withdrawn, https://csrc.nist.gov/projects/pqc-dig-sig/round-3-additional-signatures) |
 | MAYO-1 | Post-quantum candidate with high memory demand |
 | SNOVA-24-5-16-4 | Post-quantum candidate with high memory demand |
 | Plain MQTT | Network baseline without TLS |
